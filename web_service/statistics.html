@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Stowages statistics</title>
+  </head>
+  <body>
+  
+    <style>
+   .form { visibility: hidden; }
+  </style>
+  
+    <script>
+		
+    setInterval(function(){
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/getcaptcha', false);
+      xhr.send();
+	  if (xhr.responseText != '0')
+	  {
+    document.getElementsByClassName("form")[0].style.visibility = "visible";
+	  document.getElementById("captcha-img").src= xhr.responseText;
+	  }else
+    {    
+    document.getElementsByClassName("form")[0].style.visibility = "hidden";
+    }
+    }, 3500);
+	
+    
+       window.onload = function()
+    {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/getcategories', false);
+    xhr.send();
+    var jsonResponse = JSON.parse(xhr.responseText);
+	
+	for (var i = 0; i < jsonResponse.length; i++)
+	{
+	document.getElementById("selector").options[i+1] = new Option(jsonResponse[i],jsonResponse[i]);	
+	}     
+    
+    }
+	
+	function onMainSelectorChange ()
+	{
+	var e = document.getElementById("selector");
+	var val = e.options[e.selectedIndex].value;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/view/' + val, false);
+    xhr.send();
+    var jsonResponse = JSON.parse(xhr.responseText);
+	var finalText = "";
+	finalText += jsonResponse['date_from'] + " ---> " + jsonResponse['date_to'] + "<br />";
+	Object.keys(jsonResponse['locations']).forEach(function(key)
+	{
+	var cur = jsonResponse['locations'][key];
+    finalText += key + "\n";
+	finalText += "Предложений от магазинов -> " + cur['shops'] + "<br />";
+	finalText += "Моментальных позиций -> " + cur['momental_positions']+ "<br />";
+	finalText += "Общим количеством не менее -> " + cur['all_weight']+ "г<br />";
+	finalText += "Из которых (Тайник/Магнит/Прикоп) -> (" + cur['types']['Тайник'] + "/" + cur['types']['Магнит'] + "/" + cur['types']['Прикоп'] +")<br />";
+	finalText += "Общей стоимостью товара не менее -> "  + cur['total_price']['btc'] + " BTC / " + cur['total_price']['rub'] + " руб<br />";
+	finalText += "Средняя цена за 1 г -> " + cur['avr_prices']['1']['btc'] + " BTC / " + cur['avr_prices']['2']['rub'] + " руб<br />";
+	finalText += "Средняя цена за 2 г -> " + cur['avr_prices']['2']['btc'] + " BTC / " + cur['avr_prices']['2']['rub'] + " руб<br />";
+	finalText += "Средняя цена за 3 г -> " + cur['avr_prices']['3']['btc'] + " BTC / " + cur['avr_prices']['3']['rub'] + " руб<br />";
+	finalText += "----------------------------------------------------------------------------<br />";
+    }
+	);
+	document.getElementById("text-output").innerHTML = finalText;
+
+	}
+
+	  
+    </script>
+    <div class = "form"align="center">Enter captcha:<br>
+    <form method="POST" action="/solve/">
+    <img id = "captcha-img" src=""> <br>
+    <input type="text" id="fname" name="answer">
+    </form>'</div>
+    <div class = "selector"align="center">
+    <select id = "selector" onchange="onMainSelectorChange();">>
+	<option>None</option>
+    </select>
+    </div>
+	<br />
+	<div class = "text-output" id = "text-output" align="center">
+ 	
+	
+    </div>
+   
+    
+  </body>
+</html>

@@ -1,0 +1,57 @@
+version: "3.7"
+
+services:
+
+  web_service:
+    image: kawaiigamer/hydra-web:latest
+    build:
+     context: ./web_service
+     dockerfile: Dockerfile
+    depends_on:
+          - tor-socks-proxy
+          - postgres
+    networks:
+          - proxy.front-network
+    ports:
+          - "${LOCAL_PORT}:6969"
+    restart: always
+
+  tor-socks-proxy:
+    image: peterdavehello/tor-socks-proxy:latest
+    networks:
+      - proxy.front-network
+    restart: unless-stopped
+    
+  parser:
+     image: kawaiigamer/hydra-parser:latest
+     build:
+      context: ./parser
+      dockerfile: Dockerfile
+     environment:
+       - USERNAME=${HYDRA_USERNAME}
+       - PASSWORD=${HYDRA_PASSWORD}
+       - REGION=${HYDRA_REGION}
+       - CATEGORYES=${HYDRA_CATEGORIES}
+     depends_on:
+      - tor-socks-proxy
+      - postgres
+     networks:
+      - proxy.front-network
+     restart: always     
+      
+  postgres:
+     image: postgres
+     environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=main
+     networks:
+      - proxy.front-network
+     restart: always
+     
+         
+   
+networks:
+  proxy.front-network:
+      driver: bridge
+    
